@@ -1,4 +1,4 @@
-# RAG Chat Storage Service
+# AI - RAG Chat Storage Service
 
 A production-ready Spring Boot microservice for storing and managing chat histories from RAG (Retrieval-Augmented Generation) based chatbot systems. Features optional integration with multiple LLM providers including Groq, OpenAI, and local models via Ollama.
 
