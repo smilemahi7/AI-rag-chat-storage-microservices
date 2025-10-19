@@ -1,0 +1,119 @@
+services:
+  app:
+    build: .
+    ports:
+      - "${SERVER_PORT:-8080}:8080"
+    depends_on:
+      - postgres
+      - redis
+      - logstash
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_USERNAME: ${DATABASE_USERNAME}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      SPRING_REDIS_HOST: ${REDIS_HOST}
+      SPRING_REDIS_PORT: ${REDIS_PORT}
+      SPRING_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      API_KEY: ${API_KEY}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      SERVER_PORT: ${SERVER_PORT}
+      LOGGING_LEVEL_ROOT: ${LOGGING_LEVEL_ROOT}
+      LOGGING_LEVEL_COM_CHATBOT_STORAGE: ${LOGGING_LEVEL_COM_CHATBOT_STORAGE}
+
+    networks:
+      - chat-network
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: chatbot
+      POSTGRES_USER: ${DATABASE_USERNAME}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - chat-network
+
+  redis:
+    image: redis/redis-stack:7.2.0-v10
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+      - "8001:8001" # RedisInsight UI for monitoring
+    volumes:
+      - redis_data:/data
+#    command: >
+#      sh -c '
+#        if [ -n "${REDIS_PASSWORD}" ]; then
+#          redis-server --requirepass ${REDIS_PASSWORD}
+#        else
+#          redis-server
+#        fi
+#      '
+    networks:
+      - chat-network
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - chat-network
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.13.0
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - chat-network
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.13.0
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+    ports:
+      - "5044:5044"
+    depends_on:
+      - elasticsearch
+    networks:
+      - chat-network
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - chat-network
+
+#  redisinsight:
+#    image: redislabs/redisinsight:latest
+#    ports:
+#      - "8001:8001"
+#    volumes:
+#      - redisinsight_data:/db
+#    depends_on:
+#      - redis
+#    networks:
+#      - chat-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  es_data:
+
+networks:
+  chat-network:
+    driver: bridge

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="003-create-indexes" author="developer">
+        <!-- Chat Sessions Indexes -->
+        <createIndex tableName="chat_sessions" indexName="idx_user_id">
+            <column name="user_id"/>
+        </createIndex>
+
+        <createIndex tableName="chat_sessions" indexName="idx_status">
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex tableName="chat_sessions" indexName="idx_favorite">
+            <column name="is_favorite"/>
+        </createIndex>
+
+        <createIndex tableName="chat_sessions" indexName="idx_user_status_favorite">
+            <column name="user_id"/>
+            <column name="status"/>
+            <column name="is_favorite"/>
+        </createIndex>
+
+        <!-- Chat Messages Indexes -->
+        <createIndex tableName="chat_messages" indexName="idx_session_id">
+            <column name="session_id"/>
+        </createIndex>
+
+        <createIndex tableName="chat_messages" indexName="idx_sender_type">
+            <column name="sender_type"/>
+        </createIndex>
+
+        <createIndex tableName="chat_messages" indexName="idx_created_at">
+            <column name="created_at"/>
+        </createIndex>
+
+        <createIndex tableName="chat_messages" indexName="idx_session_created">
+            <column name="session_id"/>
+            <column name="created_at"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>
